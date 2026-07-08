@@ -1,37 +1,39 @@
 import { supabase, supabaseEnabled } from './supabase'
-import type { PlanNode, CheckIn, DailyQuestion, KrProgress, Article, HeatmapDay } from '@/types'
+import type { PlanNode, CheckIn, DailyQuestion, Article, HeatmapDay } from '@/types'
+
+// 由于 @supabase/supabase-js v2 的类型推断问题，从 query builder 层级做断言
+const api = {
+  from: (table: string) => (supabase!.from(table) as any),
+}
 
 // ===================== 规划树 API =====================
 export async function fetchPlanTree(): Promise<PlanNode[]> {
   if (!supabaseEnabled || !supabase) return []
-  const { data } = await supabase
-    .from('growth_plans')
+  const { data } = await api.from('growth_plans')
     .select('*')
     .eq('archived', false)
     .order('sort_order')
-  return (data as unknown as PlanNode[]) || []
+  return (data as PlanNode[]) || []
 }
 
 export async function upsertPlan(plan: Partial<PlanNode>): Promise<PlanNode | null> {
   if (!supabaseEnabled || !supabase) return null
-  const { data } = await supabase
-    .from('growth_plans')
-    .upsert(plan as Record<string, unknown>)
+  const { data } = await api.from('growth_plans')
+    .upsert(plan)
     .select()
     .single()
-  return data as unknown as PlanNode | null
+  return (data as PlanNode) || null
 }
 
 export async function updatePlanProgress(id: string, progress: number): Promise<void> {
   if (!supabaseEnabled || !supabase) return
-  await supabase.from('growth_plans').update({ progress } as Record<string, unknown>).eq('id', id)
+  await api.from('growth_plans').update({ progress }).eq('id', id)
 }
 
 // ===================== 每日打卡 API =====================
 export async function fetchCheckIns(startDate: string, endDate: string): Promise<CheckIn[]> {
   if (!supabaseEnabled || !supabase) return []
-  const { data } = await supabase
-    .from('growth_check_ins')
+  const { data } = await api.from('growth_check_ins')
     .select('*')
     .gte('check_in_date', startDate)
     .lte('check_in_date', endDate)
@@ -42,29 +44,26 @@ export async function fetchCheckIns(startDate: string, endDate: string): Promise
 
 export async function fetchTodayCheckIn(date: string): Promise<CheckIn | null> {
   if (!supabaseEnabled || !supabase) return null
-  const { data } = await supabase
-    .from('growth_check_ins')
+  const { data } = await api.from('growth_check_ins')
     .select('*')
     .eq('check_in_date', date)
     .single()
-  return data as CheckIn | null
+  return (data as CheckIn) || null
 }
 
 export async function upsertCheckIn(checkIn: Partial<CheckIn>): Promise<CheckIn | null> {
   if (!supabaseEnabled || !supabase) return null
-  const { data } = await supabase
-    .from('growth_check_ins')
-    .upsert(checkIn as Record<string, unknown>, { onConflict: 'uid,check_in_date' })
+  const { data } = await api.from('growth_check_ins')
+    .upsert(checkIn, { onConflict: 'uid,check_in_date' })
     .select()
     .single()
-  return data as unknown as CheckIn | null
+  return (data as CheckIn) || null
 }
 
 // ===================== 每日一问 API =====================
 export async function fetchQuestions(limit = 50): Promise<DailyQuestion[]> {
   if (!supabaseEnabled || !supabase) return []
-  const { data } = await supabase
-    .from('growth_questions')
+  const { data } = await api.from('growth_questions')
     .select('*')
     .eq('archived', false)
     .order('question_date', { ascending: false })
@@ -74,45 +73,32 @@ export async function fetchQuestions(limit = 50): Promise<DailyQuestion[]> {
 
 export async function fetchTodayQuestion(date: string): Promise<DailyQuestion | null> {
   if (!supabaseEnabled || !supabase) return null
-  const { data } = await supabase
-    .from('growth_questions')
+  const { data } = await api.from('growth_questions')
     .select('*')
     .eq('question_date', date)
     .single()
-  return data as DailyQuestion | null
+  return (data as DailyQuestion) || null
 }
 
 export async function upsertQuestion(q: Partial<DailyQuestion>): Promise<DailyQuestion | null> {
   if (!supabaseEnabled || !supabase) return null
-  const { data } = await supabase
-    .from('growth_questions')
-    .upsert(q as Record<string, unknown>, { onConflict: 'uid,question_date' })
+  const { data } = await api.from('growth_questions')
+    .upsert(q, { onConflict: 'uid,question_date' })
     .select()
     .single()
-  return data as unknown as DailyQuestion | null
+  return (data as DailyQuestion) || null
 }
 
 // ===================== KR进度 API =====================
-export async function fetchKrProgress(krId: string): Promise<KrProgress[]> {
-  if (!supabaseEnabled || !supabase) return []
-  const { data } = await supabase
-    .from('growth_kr_progress')
-    .select('*')
-    .eq('kr_id', krId)
-    .order('created_at')
-  return (data as unknown as KrProgress[]) || []
-}
-
 export async function recordKrProgress(krId: string, progress: number, note?: string): Promise<void> {
   if (!supabaseEnabled || !supabase) return
-  await supabase.from('growth_kr_progress').insert({ kr_id: krId, progress, note } as Record<string, unknown>)
+  await api.from('growth_kr_progress').insert({ kr_id: krId, progress, note })
 }
 
 // ===================== 文章 API =====================
 export async function fetchArticles(): Promise<Article[]> {
   if (!supabaseEnabled || !supabase) return []
-  const { data } = await supabase
-    .from('growth_articles')
+  const { data } = await api.from('growth_articles')
     .select('*')
     .eq('archived', false)
     .order('published_at', { ascending: false })
@@ -120,12 +106,7 @@ export async function fetchArticles(): Promise<Article[]> {
 }
 
 // ===================== 统计 API =====================
-export async function fetchStreakStats(): Promise<{
-  current_streak: number
-  longest_streak: number
-  week_completed: number
-  month_completed: number
-}> {
+export async function fetchStreakStats() {
   if (!supabaseEnabled || !supabase) {
     return { current_streak: 0, longest_streak: 0, week_completed: 0, month_completed: 0 }
   }
@@ -135,8 +116,7 @@ export async function fetchStreakStats(): Promise<{
   const weekAgo = toDateStr(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000))
   const monthAgo = toDateStr(new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()))
 
-  const { data: allData } = await supabase
-    .from('growth_check_ins')
+  const { data: allData } = await api.from('growth_check_ins')
     .select('check_in_date, completed_count')
     .gte('check_in_date', monthAgo)
     .eq('archived', false)
@@ -147,7 +127,6 @@ export async function fetchStreakStats(): Promise<{
   const checkins = allData as { check_in_date: string; completed_count: number }[]
   const completedDates = new Set(checkins.filter(c => c.completed_count > 0).map(c => c.check_in_date))
 
-  // Continuous streak
   let current = 0
   const d = new Date(today)
   while (completedDates.has(toDateStr(d))) {
@@ -155,31 +134,22 @@ export async function fetchStreakStats(): Promise<{
     d.setDate(d.getDate() - 1)
   }
 
-  // Longest streak
   let longest = 0
   let streak = 0
   const sorted = [...completedDates].sort()
   for (let i = 0; i < sorted.length; i++) {
-    if (i === 0 || daysDiff(sorted[i - 1], sorted[i]) === 1) {
-      streak++
-    } else {
-      longest = Math.max(longest, streak)
-      streak = 1
-    }
+    if (i === 0 || daysDiff(sorted[i - 1], sorted[i]) === 1) { streak++ }
+    else { longest = Math.max(longest, streak); streak = 1 }
   }
   longest = Math.max(longest, streak)
 
-  // Week count
   const weekDates = checkins.filter(c => c.check_in_date >= weekAgo && c.completed_count > 0)
-
-  // Month count
-  const monthDates = checkins.filter(c => c.completed_count > 0)
 
   return {
     current_streak: current,
     longest_streak: longest,
     week_completed: weekDates.length,
-    month_completed: monthDates.length,
+    month_completed: checkins.filter(c => c.completed_count > 0).length,
   }
 }
 
@@ -187,18 +157,14 @@ export async function fetchStreakStats(): Promise<{
 export async function fetchHeatmapData(year: number, month?: number): Promise<HeatmapDay[]> {
   if (!supabaseEnabled || !supabase) return []
 
-  let start: Date, end: Date
-  const now = new Date()
-  if (month !== undefined) {
-    start = new Date(year, month - 1, 1)
-    end = new Date(year, month, 0)
-  } else {
-    start = new Date(year, 0, 1)
-    end = new Date(year, 11, 31)
-  }
+  const start = month !== undefined
+    ? new Date(year, month - 1, 1)
+    : new Date(year, 0, 1)
+  const end = month !== undefined
+    ? new Date(year, month, 0)
+    : new Date(year, 11, 31)
 
-  const { data } = await supabase
-    .from('growth_check_ins')
+  const { data } = await api.from('growth_check_ins')
     .select('check_in_date, completed_count')
     .gte('check_in_date', toDateStr(start))
     .lte('check_in_date', toDateStr(end))
@@ -216,36 +182,26 @@ export async function fetchHeatmapData(year: number, month?: number): Promise<He
   while (d <= end) {
     const key = toDateStr(d)
     const count = map.get(key) || 0
-    result.push({
-      date: key,
-      count,
-      level: count === 0 ? 0 : count <= 1 ? 1 : count <= 2 ? 2 : count <= 3 ? 3 : 4,
-    })
+    result.push({ date: key, count, level: count === 0 ? 0 : count <= 1 ? 1 : count <= 2 ? 2 : count <= 3 ? 3 : 4 })
     d.setDate(d.getDate() + 1)
   }
-
   return result
 }
 
 // ===================== 全文搜索 =====================
-export async function searchAll(query: string): Promise<{
-  questions: DailyQuestion[]
-  notes: CheckIn[]
-}> {
+export async function searchAll(query: string) {
   if (!supabaseEnabled || !supabase || !query.trim()) {
     return { questions: [], notes: [] }
   }
 
   const searchTerm = query.trim()
 
-  const { data: questions } = await supabase
-    .from('growth_questions')
+  const { data: questions } = await api.from('growth_questions')
     .select('*')
     .textSearch('search_vector', searchTerm, { type: 'plain' })
     .limit(20)
 
-  const { data: notes } = await supabase
-    .from('growth_check_ins')
+  const { data: notes } = await api.from('growth_check_ins')
     .select('*')
     .textSearch('search_vector', searchTerm, { type: 'plain' })
     .limit(20)
@@ -262,7 +218,5 @@ function toDateStr(d: Date): string {
 }
 
 function daysDiff(a: string, b: string): number {
-  const da = new Date(a)
-  const db = new Date(b)
-  return Math.round((db.getTime() - da.getTime()) / (24 * 60 * 60 * 1000))
+  return Math.round((new Date(b).getTime() - new Date(a).getTime()) / (24 * 60 * 60 * 1000))
 }
