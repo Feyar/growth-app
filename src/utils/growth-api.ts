@@ -9,22 +9,22 @@ export async function fetchPlanTree(): Promise<PlanNode[]> {
     .select('*')
     .eq('archived', false)
     .order('sort_order')
-  return (data as PlanNode[]) || []
+  return (data as unknown as PlanNode[]) || []
 }
 
 export async function upsertPlan(plan: Partial<PlanNode>): Promise<PlanNode | null> {
   if (!supabaseEnabled || !supabase) return null
   const { data } = await supabase
     .from('growth_plans')
-    .upsert(plan)
+    .upsert(plan as Record<string, unknown>)
     .select()
     .single()
-  return data as PlanNode | null
+  return data as unknown as PlanNode | null
 }
 
 export async function updatePlanProgress(id: string, progress: number): Promise<void> {
   if (!supabaseEnabled || !supabase) return
-  await supabase.from('growth_plans').update({ progress }).eq('id', id)
+  await supabase.from('growth_plans').update({ progress } as Record<string, unknown>).eq('id', id)
 }
 
 // ===================== 每日打卡 API =====================
@@ -54,10 +54,10 @@ export async function upsertCheckIn(checkIn: Partial<CheckIn>): Promise<CheckIn 
   if (!supabaseEnabled || !supabase) return null
   const { data } = await supabase
     .from('growth_check_ins')
-    .upsert(checkIn, { onConflict: 'uid,check_in_date' })
+    .upsert(checkIn as Record<string, unknown>, { onConflict: 'uid,check_in_date' })
     .select()
     .single()
-  return data as CheckIn | null
+  return data as unknown as CheckIn | null
 }
 
 // ===================== 每日一问 API =====================
@@ -86,10 +86,10 @@ export async function upsertQuestion(q: Partial<DailyQuestion>): Promise<DailyQu
   if (!supabaseEnabled || !supabase) return null
   const { data } = await supabase
     .from('growth_questions')
-    .upsert(q, { onConflict: 'uid,question_date' })
+    .upsert(q as Record<string, unknown>, { onConflict: 'uid,question_date' })
     .select()
     .single()
-  return data as DailyQuestion | null
+  return data as unknown as DailyQuestion | null
 }
 
 // ===================== KR进度 API =====================
@@ -100,12 +100,12 @@ export async function fetchKrProgress(krId: string): Promise<KrProgress[]> {
     .select('*')
     .eq('kr_id', krId)
     .order('created_at')
-  return (data as KrProgress[]) || []
+  return (data as unknown as KrProgress[]) || []
 }
 
 export async function recordKrProgress(krId: string, progress: number, note?: string): Promise<void> {
   if (!supabaseEnabled || !supabase) return
-  await supabase.from('growth_kr_progress').insert({ kr_id: krId, progress, note })
+  await supabase.from('growth_kr_progress').insert({ kr_id: krId, progress, note } as Record<string, unknown>)
 }
 
 // ===================== 文章 API =====================
