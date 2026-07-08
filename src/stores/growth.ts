@@ -4,7 +4,7 @@ import type { PlanNode, CheckIn, DailyQuestion, StreakStats, HeatmapDay, Insight
 import {
   fetchPlanTree, fetchCheckIns, fetchTodayCheckIn, upsertCheckIn,
   fetchQuestions, fetchTodayQuestion, upsertQuestion,
-  fetchStreakStats, fetchHeatmapData, fetchKrProgress,
+  fetchStreakStats, fetchHeatmapData,
   fetchArticles, searchAll,
 } from '@/utils/growth-api'
 
@@ -70,6 +70,7 @@ export const useGrowthStore = defineStore('growth', () => {
 
   async function loadHeatmap(year: number, month?: number) {
     heatmapData.value = await fetchHeatmapData(year, month)
+    return heatmapData.value
   }
 
   async function checkIn(completedCount: number, totalCount: number, energyLevel?: number, note?: string) {
