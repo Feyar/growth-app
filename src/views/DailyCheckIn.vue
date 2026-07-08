@@ -1,0 +1,256 @@
+<script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { useGrowthStore } from '@/stores/growth'
+
+const auth = useAuthStore()
+const growth = useGrowthStore()
+const route = useRoute()
+
+// ── 当前日期 ──
+const today = ref(new Date())
+const dateStr = computed(() => {
+  const d = route.params.date ? new Date(route.params.date as string) : today.value
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+})
+
+const dateLabel = computed(() => {
+  const d = route.params.date ? new Date(route.params.date as string) : today.value
+  const weekday = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()]
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${weekday}`
+})
+
+const isToday = computed(() => {
+  return dateStr.value === growth.today()
+})
+
+// ── 任务 ──
+interface Task {
+  id: number
+  label: string
+  icon: string
+  duration: string
+  done: boolean
+}
+
+const tasks = ref<Task[]>([
+  { id: 1, icon: '📖', label: '查看系统结构', duration: '15′', done: false },
+  { id: 2, icon: '📖', label: '查软考报名时间+看真题', duration: '15′', done: false },
+  { id: 3, icon: '✍️', label: '写一条工作沉淀到笔记', duration: '5′', done: false },
+])
+
+const completedCount = computed(() => tasks.value.filter(t => t.done).length)
+const allDone = computed(() => completedCount.value === tasks.value.length && tasks.value.length > 0)
+
+function toggleTask(id: number) {
+  const task = tasks.value.find(t => t.id === id)
+  if (task) {
+    task.done = !task.done
+    // Update check-in if it's today
+    if (isToday.value) {
+      growth.checkIn(completedCount.value, tasks.value.length)
+    }
+  }
+}
+
+// ── 每日一问 ──
+const questionText = ref('')
+const deepenedText = ref('')
+const answerText = ref('')
+const questionStatus = ref<'pondering' | 'answered' | 'published'>('pondering')
+const showDeepened = ref(false)
+
+async function handleAskAI() {
+  if (!questionText.value.trim()) return
+  showDeepened.value = true
+  deepenedText.value = '这是一个很好的切入点。[模拟AI深化] 达梦兼容Oracle和MySQL两种模式，limit语法的差异背后其实是数据库对SQL标准的支持策略不同...'
+}
+
+async function saveQuestion() {
+  if (!questionText.value.trim()) return
+  await growth.saveQuestion({
+    question_date: dateStr.value,
+    original_question: questionText.value,
+    ai_deepened: deepenedText.value,
+    my_answer: answerText.value || null,
+    status: questionStatus.value,
+  })
+}
+
+// ── 打卡按钮 ──
+const checkInDone = ref(false)
+const energyLevel = ref(3)
+
+async function handleCheckIn() {
+  if (!isToday.value) return
+  checkInDone.value = true
+  await growth.checkIn(completedCount.value, tasks.value.length, energyLevel.value)
+}
+
+// ── 本周进度 ──
+const weekDays = computed(() => {
+  const days = []
+  const now = new Date()
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now)
+    d.setDate(d.getDate() - i)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const checkIn = growth.checkIns.find(c => c.check_in_date === key)
+    days.push({
+      label: ['日', '一', '二', '三', '四', '五', '六'][d.getDay()],
+      done: checkIn ? checkIn.completed_count > 0 : false,
+      today: key === growth.today(),
+    })
+  }
+  return days
+})
+
+onMounted(async () => {
+  if (!auth.isLoggedIn()) return
+  await growth.loadAll()
+})
+</script>
+
+<template>
+  <div v-if="!auth.isLoggedIn()" class="flex flex-col items-center justify-center min-h-[60vh] px-6">
+    <p class="text-slate-400 text-sm">请先登录</p>
+    <router-link to="/login" class="btn-ghost mt-3">登录</router-link>
+  </div>
+
+  <div v-else class="px-4 pt-2 pb-6 space-y-4 animate-fade-in">
+    <!-- 日期 + 精力 -->
+    <div class="card">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <div class="text-sm font-medium text-slate-200">{{ dateLabel }}</div>
+          <span v-if="!isToday" class="text-xs text-slate-400">查看历史记录</span>
+        </div>
+        <div v-if="isToday" class="flex gap-1">
+          <button
+            v-for="i in 5"
+            :key="i"
+            @click="energyLevel = i"
+            class="w-7 h-7 rounded-full text-xs transition-all duration-150"
+            :class="energyLevel === i ? 'bg-grow-500 text-white scale-110' : 'bg-deep-600 text-slate-500'"
+          >
+            {{ ['😞', '😐', '🙂', '😊', '😄'][i - 1] }}
+          </button>
+        </div>
+      </div>
+
+      <!-- 今日任务 -->
+      <div class="space-y-2">
+        <div
+          v-for="task in tasks"
+          :key="task.id"
+          @click="toggleTask(task.id)"
+          class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-150"
+          :class="task.done ? 'bg-emerald-500/10 line-through text-slate-500' : 'bg-deep-600 hover:bg-deep-600/80 text-slate-200'"
+        >
+          <div
+            class="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0"
+            :class="task.done ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600'"
+          >
+            <span v-if="task.done" class="text-white text-xs">✓</span>
+          </div>
+          <span class="text-sm">{{ task.icon }} {{ task.label }}</span>
+          <span class="ml-auto text-xs text-slate-500">{{ task.duration }}</span>
+        </div>
+      </div>
+
+      <!-- 本周进度 -->
+      <div class="mt-4 pt-3 border-t border-white/5">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-xs text-slate-400">本周进度</span>
+          <span class="text-xs text-slate-400">{{ growth.stats.week_completed }}/7</span>
+        </div>
+        <div class="flex gap-1.5 justify-center">
+          <div
+            v-for="day in weekDays"
+            :key="day.label"
+            class="flex flex-col items-center gap-1"
+          >
+            <div
+              class="w-7 h-7 rounded-lg text-[10px] flex items-center justify-center transition-all"
+              :class="day.today ? 'dot-today text-grow-400' : day.done ? 'dot-done text-white' : 'dot-miss text-slate-600'"
+            >
+              {{ day.done ? '✓' : '' }}
+            </div>
+            <span class="text-[9px]" :class="day.today ? 'text-grow-400' : 'text-slate-600'">{{ day.today ? '今' : day.label }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 每日一问 -->
+    <div class="card">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-sm font-medium text-slate-200">💡 每日一问</span>
+        <span class="text-[10px] text-slate-500">今天工作中有什么想深挖的？</span>
+      </div>
+
+      <textarea
+        v-model="questionText"
+        placeholder="例如：今天发现达梦的limit语法和MySQL不一样，想搞清楚为什么..."
+        class="w-full bg-deep-600 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-grow-500/50 transition-colors resize-none h-20"
+      ></textarea>
+
+      <div class="flex gap-2 mt-2">
+        <button
+          @click="handleAskAI"
+          :disabled="!questionText.trim()"
+          class="btn-ghost text-xs flex items-center gap-1"
+        >
+          🤖 帮我深化
+        </button>
+        <button
+          @click="saveQuestion"
+          :disabled="!questionText.trim()"
+          class="btn-ghost text-xs flex items-center gap-1 ml-auto"
+        >
+          💾 保存
+        </button>
+      </div>
+
+      <!-- AI深化结果 -->
+      <div v-if="showDeepened" class="mt-3 p-3 bg-grow-500/10 rounded-xl border border-grow-500/20 animate-slide-up">
+        <p class="text-xs text-grow-300 font-medium mb-1">🤖 深化方向</p>
+        <p class="text-xs text-slate-300 leading-relaxed">{{ deepenedText }}</p>
+      </div>
+
+      <!-- 我的回答 -->
+      <div v-if="showDeepened" class="mt-3 animate-slide-up">
+        <label class="text-xs text-slate-400 mb-1 block">📝 我的研究结果</label>
+        <textarea
+          v-model="answerText"
+          placeholder="记录你的理解..."
+          class="w-full bg-deep-600 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-grow-500/50 transition-colors resize-none h-16"
+        ></textarea>
+      </div>
+
+      <!-- 状态 -->
+      <div v-if="questionText" class="flex gap-2 mt-2">
+        <button
+          v-for="opt in [{ key: 'pondering', label: '🤔 思考中' }, { key: 'answered', label: '✅ 已回答' }, { key: 'published', label: '📝 已发文' }]"
+          :key="opt.key"
+          @click="questionStatus = opt.key as any"
+          class="text-[10px] px-2 py-1 rounded-full transition-all"
+          :class="questionStatus === opt.key ? 'bg-grow-500/20 text-grow-400 border border-grow-500/30' : 'bg-deep-600 text-slate-500 border border-transparent'"
+        >
+          {{ opt.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- 打卡按钮 -->
+    <button
+      v-if="isToday"
+      @click="handleCheckIn"
+      class="btn-primary w-full py-4 text-base flex items-center justify-center gap-2"
+      :class="{ 'opacity-50': checkInDone }"
+    >
+      {{ checkInDone ? '🎉 今日已打卡' : allDone ? '✅ 完成今日打卡' : `📝 打卡（${completedCount}/${tasks.length}）` }}
+    </button>
+  </div>
+</template>

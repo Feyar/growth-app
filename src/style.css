@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── 基础 ── */
+html, body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #0B1121;
+  color: #F1F5F9;
+}
+
+/* ── 滚动条 ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+
+/* ── 实用类 ── */
+.card {
+  @apply bg-deep-700 rounded-2xl p-4 border border-white/5 shadow-lg;
+}
+
+.card-highlight {
+  @apply card border-grow-500/20 bg-gradient-to-br from-deep-700 to-deep-800;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-grow-500 to-grow-600 text-white font-semibold
+         rounded-xl px-6 py-3 active:scale-95 transition-all duration-150
+         shadow-lg shadow-grow-500/25 disabled:opacity-50 disabled:active:scale-100;
+}
+
+.btn-ghost {
+  @apply bg-white/5 text-slate-300 font-medium rounded-xl px-4 py-2
+         active:scale-95 transition-all duration-150 hover:bg-white/10;
+}
+
+.stat-card {
+  @apply bg-deep-700 rounded-2xl p-4 text-center border border-white/5;
+}
+
+.stat-value {
+  @apply text-2xl font-bold text-grow-400;
+}
+
+.stat-label {
+  @apply text-xs text-slate-400 mt-1;
+}
+
+.progress-bar {
+  @apply h-2 bg-deep-600 rounded-full overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full bg-gradient-to-r from-grow-500 to-grow-400 rounded-full transition-all duration-700 ease-out;
+}
+
+/* ── 打卡方块 ── */
+.dot-done {
+  @apply w-8 h-8 rounded-lg bg-grow-500 shadow-sm shadow-grow-500/30;
+}
+.dot-miss {
+  @apply w-8 h-8 rounded-lg bg-deep-600 border border-white/5;
+}
+.dot-today {
+  @apply w-8 h-8 rounded-lg border-2 border-grow-400 bg-grow-500/20;
+}
+
+/* ── 热力图颜色 ── */
+.heat-0 { @apply bg-deep-600/50 }
+.heat-1 { @apply bg-grow-900/60 }
+.heat-2 { @apply bg-grow-700/70 }
+.heat-3 { @apply bg-grow-500/80 }
+.heat-4 { @apply bg-grow-400 }
+
+/* ── 过渡动画 ── */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active, .slide-leave-active {
+  transition: all 0.3s ease;
+}
+.slide-enter-from { transform: translateX(20px); opacity: 0; }
+.slide-leave-to { transform: translateX(-20px); opacity: 0; }
