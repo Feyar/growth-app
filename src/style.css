@@ -1,0 +1,313 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS 变量（默认 = dark） ── */
+:root,
+[data-theme="dark"] {
+  --bg-page: #0B1121;
+  --bg-card: #1A2332;
+  --bg-card-highlight: linear-gradient(135deg, #1A2332, #111827);
+  --bg-elevated: #1E293B;
+  --bg-subtle: #111827;
+  --bg-input: #1E293B;
+
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --text-dim: #475569;
+
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-hover: rgba(255, 255, 255, 0.10);
+
+  --accent: #F59E0B;
+  --accent-light: #FBBF24;
+  --accent-bg: rgba(245, 158, 11, 0.15);
+  --accent-border: rgba(245, 158, 11, 0.25);
+
+  --success: #34D399;
+  --success-bg: rgba(52, 211, 153, 0.10);
+  --danger: #F87171;
+  --danger-bg: rgba(248, 113, 113, 0.10);
+
+  --dot-done: #F59E0B;
+  --dot-miss-bg: #1E293B;
+  --dot-today-bg: rgba(245, 158, 11, 0.20);
+  --dot-today-border: #FBBF24;
+
+  --heat-0: rgba(30, 41, 59, 0.5);
+  --heat-1: rgba(120, 53, 15, 0.6);
+  --heat-2: rgba(180, 83, 9, 0.7);
+  --heat-3: rgba(245, 158, 11, 0.8);
+  --heat-4: #FBBF24;
+
+  --nav-bg: rgba(11, 17, 33, 0.85);
+  --nav-border: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="light"] {
+  --bg-page: #F4F5F7;
+  --bg-card: #FFFFFF;
+  --bg-card-highlight: linear-gradient(135deg, #FFFFFF, #FAFBFC);
+  --bg-elevated: #EEF0F4;
+  --bg-subtle: #FAFBFC;
+  --bg-input: #FFFFFF;
+
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --text-dim: #CBD0D8;
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-hover: rgba(0, 0, 0, 0.12);
+
+  --accent: #D97706;
+  --accent-light: #F59E0B;
+  --accent-bg: rgba(217, 119, 6, 0.10);
+  --accent-border: rgba(217, 119, 6, 0.20);
+
+  --success: #059669;
+  --success-bg: rgba(5, 150, 105, 0.10);
+  --danger: #DC2626;
+  --danger-bg: rgba(220, 38, 38, 0.08);
+
+  --dot-done: #D97706;
+  --dot-miss-bg: #E2E6EC;
+  --dot-today-bg: rgba(217, 119, 6, 0.15);
+  --dot-today-border: #D97706;
+
+  --heat-0: rgba(226, 230, 236, 0.7);
+  --heat-1: rgba(251, 191, 36, 0.3);
+  --heat-2: rgba(245, 158, 11, 0.5);
+  --heat-3: rgba(217, 119, 6, 0.7);
+  --heat-4: #D97706;
+
+  --nav-bg: rgba(255, 255, 255, 0.90);
+  --nav-border: rgba(0, 0, 0, 0.06);
+}
+
+/* ── 过渡动画（平滑切换主题） ── */
+html {
+  transition: background-color 0.6s ease, color 0.6s ease;
+}
+
+*,
+*::before,
+*::after {
+  transition: background-color 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease;
+}
+
+/* ── 基础 ── */
+html, body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+}
+
+/* ── 滚动条 ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+
+/* ── 实用类 ── */
+.card {
+  background-color: var(--bg-card);
+  border-radius: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+.card-highlight {
+  border-radius: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--accent-border);
+  background: var(--bg-card-highlight);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  color: white;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+}
+
+.btn-primary:disabled:active {
+  transform: none;
+}
+
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  font-weight: 500;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.btn-ghost:active {
+  transform: scale(0.95);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .btn-ghost {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .btn-ghost:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.stat-card {
+  background-color: var(--bg-card);
+  border-radius: 1rem;
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid var(--border-subtle);
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.progress-bar {
+  height: 0.5rem;
+  background-color: var(--bg-elevated);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  border-radius: 9999px;
+  transition: width 0.7s ease-out;
+}
+
+/* ── 打卡方块 ── */
+.dot-done {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background-color: var(--dot-done);
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.75rem;
+}
+
+.dot-miss {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background-color: var(--dot-miss-bg);
+  border: 1px solid var(--border-subtle);
+}
+
+.dot-today {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--dot-today-border);
+  background-color: var(--dot-today-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+/* ── 热力图颜色 ── */
+.heat-0 { background-color: var(--heat-0); }
+.heat-1 { background-color: var(--heat-1); }
+.heat-2 { background-color: var(--heat-2); }
+.heat-3 { background-color: var(--heat-3); }
+.heat-4 { background-color: var(--heat-4); }
+
+/* ── 主题容器类 ── */
+.bg-page { background-color: var(--bg-page); }
+.bg-card { background-color: var(--bg-card); }
+.bg-elevated { background-color: var(--bg-elevated); }
+.bg-subtle { background-color: var(--bg-subtle); }
+.bg-input { background-color: var(--bg-input); }
+.bg-accent { background-color: var(--accent-bg); }
+.bg-success { background-color: var(--success-bg); }
+.bg-danger { background-color: var(--danger-bg); }
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-accent { color: var(--accent); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+
+.border-subtle { border-color: var(--border-subtle); }
+.border-accent { border-color: var(--accent-border); }
+
+/* ── 过渡动画 ── */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active, .slide-leave-active {
+  transition: all 0.3s ease;
+}
+.slide-enter-from { transform: translateX(20px); opacity: 0; }
+.slide-leave-to { transform: translateX(-20px); opacity: 0; }
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
