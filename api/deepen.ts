@@ -11,23 +11,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: '请提供问题内容' })
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY
+  const apiKey = process.env.DEEPSEEK_API_KEY
   if (!apiKey) {
     return res.status(200).json({
-      deepened: 'AI 深化功能尚未配置。请在 Vercel 项目设置中添加 OPENROUTER_API_KEY 环境变量。\n\n你也可以手动把问题记下来，配置好 API key 后再来深化。',
+      deepened: 'AI 深化功能尚未配置。请在 Vercel 项目设置中添加 DEEPSEEK_API_KEY 环境变量。',
     })
   }
 
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://github.com/Feyar/growth-app',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-001',
+        model: 'deepseek-v4-flash',
         messages: [
           {
             role: 'system',
