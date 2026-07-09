@@ -1,5 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 import path from 'path'
+import { fileURLToPath } from 'url'
+import WebSocket from 'ws'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 // ===== Wiki 路径（相对于 vault 根目录） =====
 export const WIKI_ROOT = path.resolve(
@@ -17,7 +22,9 @@ export function createSupabaseClient() {
     console.error('   可在 growth-app 目录创建 .env.local 或 export 环境变量')
     process.exit(1)
   }
-  return createClient(url, anonKey)
+  return createClient(url, anonKey, {
+    realtime: { transport: WebSocket as any },
+  })
 }
 
 // ===== 同步账号 =====

@@ -340,43 +340,33 @@ async function sync() {
   // 3. Build plan hierarchy
   const allNodes: Partial<PlanNode>[] = []
 
-  // Level 1: Vision (root)
+  // Collect unique nodes from each parser (no nested duplication)
   const visions = parseVision(uid, null)
   allNodes.push(...visions)
 
-  // Each vision -> Annual
-  for (const vision of visions) {
-    const visionId = vision.title // Use title as pseudo-id for matching
-    const annuals = parseAnnual(uid, null)
-    allNodes.push(...annuals)
+  const annuals = parseAnnual(uid, null)
+  allNodes.push(...annuals)
 
-    // Annual -> Quarterly
-    for (const annual of annuals) {
-      const quarters = parseQuarterly(uid, null)
-      allNodes.push(...quarters)
+  const quarters = parseQuarterly(uid, null)
+  allNodes.push(...quarters)
 
-      // Quarterly -> Weekly
-      for (const quarter of quarters) {
-        const weeklies = parseWeekly(uid, null)
-        allNodes.push(...weeklies)
+  const weeklies = parseWeekly(uid, null)
+  allNodes.push(...weeklies)
 
-        // Weekly -> Daily
-        for (const weekly of weeklies) {
-          const dailies = parseDaily(uid, null)
-          allNodes.push(...dailies)
-        }
-      }
-    }
-  }
+  const dailies = parseDaily(uid, null)
+  allNodes.push(...dailies)
 
   console.log(`📋 共解析 ${allNodes.length} 个规划节点\n`)
 
-  // 4. Upsert to Supabase
-  let upserted = 0
+  // 4. Delete old data then insert fresh
+  console.log('🗑️ 清除旧数据...')
+  await supabase.from('growth_plans').delete().eq('uid', uid)
+
+  let inserted = 0
   for (const node of allNodes) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('growth_plans')
-      .upsert({
+      .insert({
         uid,
         level: node.level,
         area: node.area,
@@ -390,21 +380,17 @@ async function sync() {
         is_current: node.is_current || false,
         meta: node.meta || {},
         parent_id: node.parent_id || null,
-      }, {
-        onConflict: 'uid,level,area,start_date',
-        ignoreDuplicates: false,
       })
-      .select('id,title')
 
     if (error) {
-      console.error(`  ❌ upsert 失败: ${node.title}`, error.message)
+      console.error(`  ❌ 插入失败: ${node.title}`, error.message)
     } else {
-      upserted++
+      inserted++
       console.log(`  ✅ ${node.level?.padEnd(10)} ${node.title}`)
     }
   }
 
-  console.log(`\n✨ 完成! 成功同步 ${upserted}/${allNodes.length} 个节点`)
+  console.log(`\n✨ 完成! 成功同步 ${inserted}/${allNodes.length} 个节点`)
 }
 
 sync().catch(err => {
