@@ -51,6 +51,7 @@ const completedCount = computed(() => tasks.value.filter(t => t.done).length)
 const allDone = computed(() => completedCount.value === tasks.value.length && tasks.value.length > 0)
 
 function toggleTask(id: number) {
+  if (checkInDone.value) return
   const task = tasks.value.find(t => t.id === id)
   if (task) {
     task.done = !task.done
@@ -131,6 +132,8 @@ onMounted(async () => {
   if (growth.todayCheckIn) {
     checkInDone.value = true
     energyLevel.value = growth.todayCheckIn.energy_level || 3
+    // 已打卡的任务置为已完成（划掉不可勾选）
+    tasks.value.forEach(t => { t.done = true })
   }
 })
 </script>
