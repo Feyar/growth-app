@@ -32,7 +32,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen" style="background-color: var(--bg-page); color: var(--text-primary); padding-bottom: 5rem;">
+  <div class="min-h-screen" style="background-color: var(--bg-page); color: var(--text-primary); padding-bottom: 5rem; padding-top: env(safe-area-inset-top, 0px);">
     <header v-if="isRootPage" class="px-4 pt-6 pb-2">
       <div class="flex items-center justify-between">
         <div>

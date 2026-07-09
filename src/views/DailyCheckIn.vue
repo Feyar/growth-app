@@ -70,7 +70,18 @@ const showDeepened = ref(false)
 async function handleAskAI() {
   if (!questionText.value.trim()) return
   showDeepened.value = true
-  deepenedText.value = '这是一个很好的切入点。[模拟AI深化] 达梦兼容Oracle和MySQL两种模式，limit语法的差异背后其实是数据库对SQL标准的支持策略不同...'
+  deepenedText.value = 'AI 思考中...'
+  try {
+    const res = await fetch('/api/deepen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: questionText.value }),
+    })
+    const data = await res.json()
+    deepenedText.value = data.deepened || '暂无深化结果'
+  } catch {
+    deepenedText.value = '网络错误，请稍后再试'
+  }
 }
 
 async function saveQuestion() {
