@@ -205,7 +205,7 @@ function parseQuarterly(uid: string, parentId: string | null): Partial<PlanNode>
 
 /** 周复盘 → weekly 节点 */
 function parseWeekly(uid: string, parentId: string | null): Partial<PlanNode>[] {
-  const content = readFile(`05-周复盘/${CURRENT_WEEK}.md`)
+  const content = readFile(`05-周复盘/${CURRENT_YEAR}-${CURRENT_WEEK}.md`)
   if (!content) return []
 
   // Extract tasks from the weekly task table
