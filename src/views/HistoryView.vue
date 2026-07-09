@@ -45,7 +45,7 @@ async function loadHeatmap() {
 
 const monthHeatmap = computed(() => {
   const days = heatmapData.value
-  const weeks: HeatmapDay[][] = []
+  const weeks: (HeatmapDay | null)[][] = []
   if (days.length === 0) return weeks
 
   const firstDay = new Date(days[0].date).getDay()
@@ -137,7 +137,7 @@ watch(activeTab, async (tab) => {
 
 <template>
   <div v-if="!auth.isLoggedIn()" class="flex flex-col items-center justify-center min-h-[60vh] px-6">
-    <p class="text-slate-400 text-sm">请先登录</p>
+    <p class="text-muted text-sm">请先登录</p>
     <router-link to="/login" class="btn-ghost mt-3">登录</router-link>
   </div>
 
@@ -149,7 +149,7 @@ watch(activeTab, async (tab) => {
         :key="tab.key"
         @click="switchTab(tab.key)"
         class="shrink-0 text-xs px-3 py-2 rounded-xl transition-all duration-150 flex flex-col items-center"
-        :class="activeTab === tab.key ? 'bg-grow-500/20 text-grow-400 border border-grow-500/30' : 'bg-deep-700 text-slate-400 border border-white/5'"
+        :class="activeTab === tab.key ? 'bg-accent border-accent text-accent' : 'bg-card text-muted border-subtle border'"
       >
         <span>{{ tab.label }}</span>
         <span class="text-[9px] opacity-60">{{ tab.desc }}</span>
@@ -159,34 +159,34 @@ watch(activeTab, async (tab) => {
     <!-- ─── 日历热力图 ─── -->
     <div v-if="activeTab === 'calendar'" class="card animate-fade-in">
       <div class="flex items-center justify-between mb-4">
-        <button @click="prevMonth" class="text-slate-400 text-sm px-2">◀</button>
-        <span class="text-sm font-medium text-slate-200">{{ heatmapYear }}年{{ heatmapMonth }}月</span>
-        <button @click="nextMonth" class="text-slate-400 text-sm px-2">▶</button>
+        <button @click="prevMonth" class="text-muted text-sm px-2">◀</button>
+        <span class="text-sm font-medium text-primary">{{ heatmapYear }}年{{ heatmapMonth }}月</span>
+        <button @click="nextMonth" class="text-muted text-sm px-2">▶</button>
       </div>
 
       <!-- 图例 -->
       <div class="flex items-center gap-1 mb-3 justify-end">
-        <span class="text-[9px] text-slate-500">少</span>
+        <span class="text-[9px] text-muted">少</span>
         <div class="w-3 h-3 rounded heat-0"></div>
         <div class="w-3 h-3 rounded heat-1"></div>
         <div class="w-3 h-3 rounded heat-2"></div>
         <div class="w-3 h-3 rounded heat-3"></div>
         <div class="w-3 h-3 rounded heat-4"></div>
-        <span class="text-[9px] text-slate-500">多</span>
+        <span class="text-[9px] text-muted">多</span>
       </div>
 
-      <div class="text-xs text-slate-400 mb-2">本月完成：{{ monthTotal }}天</div>
+      <div class="text-xs text-muted mb-2">本月完成：{{ monthTotal }}天</div>
 
       <!-- 热力图 -->
       <div v-if="monthHeatmap.length > 0">
         <div class="flex gap-1 mb-1">
           <div class="w-7 shrink-0"></div>
-          <div v-for="l in ['一','二','三','四','五','六','日']" :key="l" class="text-[9px] text-slate-600 text-center w-[calc((100%-28px)/7)]">
+          <div v-for="l in ['一','二','三','四','五','六','日']" :key="l" class="text-[9px] text-muted text-center w-[calc((100%-28px)/7)]">
             {{ l }}
           </div>
         </div>
         <div v-for="(week, wi) in monthHeatmap" :key="wi" class="flex gap-1 mb-1">
-          <div class="w-7 text-[9px] text-slate-600 flex items-center">{{ wi + 1 }}</div>
+          <div class="w-7 text-[9px] text-muted flex items-center">{{ wi + 1 }}</div>
           <div
             v-for="(day, di) in week"
             :key="di"
@@ -195,15 +195,16 @@ watch(activeTab, async (tab) => {
             @mouseenter="hoverDay = day"
             @mouseleave="hoverDay = null"
           >
-            <span v-if="day" class="text-white/60">{{ new Date(day.date).getDate() }}</span>
+            <span v-if="day && day.count > 0" class="text-white/60">{{ new Date(day.date).getDate() }}</span>
+            <span v-else-if="day" class="text-muted/40">{{ new Date(day.date).getDate() }}</span>
           </div>
         </div>
       </div>
 
-      <div v-else class="text-center py-6 text-slate-500 text-sm">暂无打卡数据</div>
+      <div v-else class="text-center py-6 text-muted text-sm">暂无打卡数据</div>
 
       <!-- 悬浮详情 -->
-      <div v-if="hoverDay" class="mt-3 p-2 bg-deep-600 rounded-lg text-xs text-slate-300 animate-fade-in">
+      <div v-if="hoverDay" class="mt-3 p-2 bg-elevated rounded-lg text-xs text-secondary animate-fade-in">
         {{ hoverDay.date }} — 完成 {{ hoverDay.count }} 项
       </div>
     </div>
@@ -211,9 +212,9 @@ watch(activeTab, async (tab) => {
     <!-- ─── 趋势图 ─── -->
     <div v-if="activeTab === 'trend'" class="animate-fade-in">
       <div class="card">
-        <div class="text-sm font-medium text-slate-200 mb-3">📈 KR进度趋势</div>
-        <p class="text-xs text-slate-400">选择一个KR查看其进度变化曲线（记录进度后自动生成）</p>
-        <div class="text-center py-8 text-slate-500 text-sm">
+        <div class="text-sm font-medium text-primary mb-3">📈 KR进度趋势</div>
+        <p class="text-xs text-muted">选择一个KR查看其进度变化曲线（记录进度后自动生成）</p>
+        <div class="text-center py-8 text-muted text-sm">
           暂无进度数据 — 开始在规划中记录KR进度吧
         </div>
       </div>
@@ -223,38 +224,38 @@ watch(activeTab, async (tab) => {
     <div v-if="activeTab === 'pipeline'" class="space-y-4 animate-fade-in">
       <!-- 漏斗 -->
       <div class="card">
-        <div class="text-sm font-medium text-slate-200 mb-3">🔄 知识流水线</div>
+        <div class="text-sm font-medium text-primary mb-3">🔄 知识流水线</div>
         <div class="flex items-end justify-center gap-4 py-4">
           <div class="text-center">
-            <div class="text-2xl font-bold text-slate-200">{{ growth.pipelineStats.total_questions }}</div>
-            <div class="text-xs text-slate-400">💡 提问</div>
+            <div class="text-2xl font-bold text-primary">{{ growth.pipelineStats.total_questions }}</div>
+            <div class="text-xs text-muted">💡 提问</div>
           </div>
-          <div class="text-2xl text-slate-600">→</div>
+          <div class="text-2xl text-muted">→</div>
           <div class="text-center">
-            <div class="text-2xl font-bold text-emerald-400">{{ growth.pipelineStats.answered }}</div>
-            <div class="text-xs text-slate-400">✅ 已回答</div>
+            <div class="text-2xl font-bold text-success">{{ growth.pipelineStats.answered }}</div>
+            <div class="text-xs text-muted">✅ 已回答</div>
           </div>
-          <div class="text-2xl text-slate-600">→</div>
+          <div class="text-2xl text-muted">→</div>
           <div class="text-center">
-            <div class="text-2xl font-bold text-grow-400">{{ growth.pipelineStats.published }}</div>
-            <div class="text-xs text-slate-400">📝 已发文</div>
+            <div class="text-2xl font-bold text-accent">{{ growth.pipelineStats.published }}</div>
+            <div class="text-xs text-muted">📝 已发文</div>
           </div>
         </div>
       </div>
 
       <!-- 待转化 -->
       <div v-if="growth.unansweredQuestions.length > 0" class="card">
-        <div class="text-sm font-medium text-slate-200 mb-3">✍️ 已回答·待发文</div>
+        <div class="text-sm font-medium text-primary mb-3">✍️ 已回答·待发文</div>
         <div class="space-y-2">
-          <div v-for="q in growth.unansweredQuestions.slice(0, 5)" :key="q.id" class="p-3 bg-deep-600 rounded-xl">
+          <div v-for="q in growth.unansweredQuestions.slice(0, 5)" :key="q.id" class="p-3 bg-elevated rounded-xl">
             <div class="flex items-start justify-between gap-2">
               <div class="flex-1 min-w-0">
-                <p class="text-xs text-slate-300">{{ q.original_question }}</p>
-                <p class="text-[10px] text-slate-500 mt-0.5">{{ q.question_date }} • 已回答</p>
+                <p class="text-xs text-secondary">{{ q.original_question }}</p>
+                <p class="text-[10px] text-muted mt-0.5">{{ q.question_date }} • 已回答</p>
               </div>
               <button
                 @click="markAsPublished(q)"
-                class="shrink-0 text-[10px] px-2 py-1 bg-grow-500/20 text-grow-400 rounded-full"
+                class="shrink-0 text-[10px] px-2 py-1 bg-accent text-accent rounded-full"
               >
                 发文
               </button>
@@ -265,20 +266,20 @@ watch(activeTab, async (tab) => {
 
       <!-- 所有问题 -->
       <div class="card">
-        <div class="text-sm font-medium text-slate-200 mb-3">📋 所有问题</div>
+        <div class="text-sm font-medium text-primary mb-3">📋 所有问题</div>
         <div v-if="growth.questions.length > 0" class="space-y-2">
-          <div v-for="q in growth.questions.slice(0, 20)" :key="q.id" class="flex items-start gap-2 p-2 rounded-lg hover:bg-white/5">
+          <div v-for="q in growth.questions.slice(0, 20)" :key="q.id" class="flex items-start gap-2 p-2 rounded-lg hover:bg-[var(--bg-elevated)]">
             <span class="text-sm shrink-0">
               {{ q.status === 'published' ? '📝' : q.status === 'answered' ? '✅' : '💡' }}
             </span>
             <div class="flex-1 min-w-0">
-              <p class="text-xs text-slate-300 truncate">{{ q.original_question }}</p>
-              <p class="text-[10px] text-slate-500">{{ q.question_date }}</p>
+              <p class="text-xs text-secondary truncate">{{ q.original_question }}</p>
+              <p class="text-[10px] text-muted">{{ q.question_date }}</p>
             </div>
-            <a v-if="q.article_url" :href="q.article_url" target="_blank" class="text-[10px] text-grow-400 shrink-0">查看</a>
+            <a v-if="q.article_url" :href="q.article_url" target="_blank" class="text-[10px] text-accent shrink-0">查看</a>
           </div>
         </div>
-        <div v-else class="text-center py-6 text-slate-500 text-sm">暂无问题记录</div>
+        <div v-else class="text-center py-6 text-muted text-sm">暂无问题记录</div>
       </div>
     </div>
 
@@ -286,34 +287,34 @@ watch(activeTab, async (tab) => {
     <div v-if="activeTab === 'insights'" class="space-y-4 animate-fade-in">
       <div class="card">
         <div class="flex items-center justify-between mb-3">
-          <span class="text-sm font-medium text-slate-200">🔍 中断模式分析</span>
-          <button @click="loadInsights" class="text-xs text-grow-400">刷新</button>
+          <span class="text-sm font-medium text-primary">🔍 中断模式分析</span>
+          <button @click="loadInsights" class="text-xs text-accent">刷新</button>
         </div>
 
-        <div v-if="loadingInsights" class="text-center py-6 text-slate-500 text-sm">分析中...</div>
+        <div v-if="loadingInsights" class="text-center py-6 text-muted text-sm">分析中...</div>
 
         <div v-else-if="insights" class="space-y-4">
           <!-- 每日中断率 -->
           <div>
-            <div class="text-xs text-slate-400 mb-2">每周各天中断率（越高越容易断）</div>
+            <div class="text-xs text-muted mb-2">每周各天中断率（越高越容易断）</div>
             <div class="space-y-1.5">
               <div v-for="(rate, i) in insights.day_of_week_break_rate" :key="i" class="flex items-center gap-2">
-                <span class="text-[10px] text-slate-400 w-8">{{ dayLabels[i] }}</span>
-                <div class="flex-1 h-3 bg-deep-600 rounded-full overflow-hidden">
+                <span class="text-[10px] text-muted w-8">{{ dayLabels[i] }}</span>
+                <div class="flex-1 h-3 bg-elevated rounded-full overflow-hidden">
                   <div
                     class="h-full rounded-full transition-all duration-700"
-                    :class="rate > 50 ? 'bg-red-500/60' : rate > 30 ? 'bg-grow-500/60' : 'bg-emerald-500/60'"
-                    :style="{ width: rate + '%' }"
+                    :class="rate > 50 ? 'bg-danger' : rate > 30 ? 'text-accent' : 'text-success'"
+                    :style="{ width: rate + '%', backgroundColor: rate > 50 ? 'var(--danger)' : rate > 30 ? 'var(--accent)' : 'var(--success)' }"
                   ></div>
                 </div>
-                <span class="text-[10px] text-slate-400 w-8 text-right">{{ rate }}%</span>
+                <span class="text-[10px] text-muted w-8 text-right">{{ rate }}%</span>
               </div>
             </div>
           </div>
 
           <!-- 每周趋势 -->
           <div>
-            <div class="text-xs text-slate-400 mb-2">每周完成天数趋势</div>
+            <div class="text-xs text-muted mb-2">每周完成天数趋势</div>
             <div class="flex items-end gap-1 h-20">
               <div
                 v-for="w in insights.weekly_trend.slice(-8)"
@@ -322,10 +323,9 @@ watch(activeTab, async (tab) => {
               >
                 <div
                   class="w-full rounded-t transition-all duration-500"
-                  :class="w.count >= 3 ? 'bg-grow-500' : 'bg-slate-600'"
-                  :style="{ height: (w.count / 7 * 100) + '%' }"
+                  :style="{ height: (w.count / 7 * 100) + '%', backgroundColor: w.count >= 3 ? 'var(--accent)' : 'var(--text-muted)' }"
                 ></div>
-                <span class="text-[8px] text-slate-500">{{ w.week.slice(-2) }}</span>
+                <span class="text-[8px] text-muted">{{ w.week.slice(-2) }}</span>
               </div>
             </div>
           </div>
@@ -333,21 +333,21 @@ watch(activeTab, async (tab) => {
           <!-- 关键指标 -->
           <div class="grid grid-cols-2 gap-3">
             <div class="stat-card">
-              <div class="text-lg font-bold text-emerald-400">{{ insights.longest_streak }}天</div>
+              <div class="text-lg font-bold text-success">{{ insights.longest_streak }}天</div>
               <div class="stat-label">最长连续</div>
             </div>
             <div class="stat-card">
-              <div class="text-lg font-bold text-red-400">{{ insights.longest_break }}天</div>
+              <div class="text-lg font-bold text-danger">{{ insights.longest_break }}天</div>
               <div class="stat-label">最长中断</div>
             </div>
           </div>
 
-          <div v-if="insights.day_of_week_break_rate[4] > 50" class="p-3 bg-grow-500/10 rounded-xl border border-grow-500/20">
-            <p class="text-xs text-grow-300">💡 建议：你周四断的概率较高，可以考虑把周四的最小动作提前到早上做掉</p>
+          <div v-if="insights.day_of_week_break_rate[4] > 50" class="p-3 bg-accent rounded-xl border border-accent">
+            <p class="text-xs text-accent">💡 建议：你周四断的概率较高，可以考虑把周四的最小动作提前到早上做掉</p>
           </div>
         </div>
 
-        <div v-else class="text-center py-6 text-slate-500 text-sm">
+        <div v-else class="text-center py-6 text-muted text-sm">
           暂无足够数据进行分析 — 需要至少2周打卡记录
         </div>
       </div>
@@ -361,7 +361,7 @@ watch(activeTab, async (tab) => {
             v-model="searchQuery"
             @keyup.enter="handleSearch"
             placeholder="搜索你的记录... 例如：达梦、国密、RAG"
-            class="flex-1 bg-deep-600 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-grow-500/50 transition-colors"
+            class="flex-1 bg-input border border-subtle rounded-xl px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-accent/50 transition-colors"
           />
           <button
             @click="handleSearch"
@@ -375,27 +375,27 @@ watch(activeTab, async (tab) => {
 
       <div v-if="searchResults.questions.length > 0 || searchResults.notes.length > 0" class="space-y-3">
         <div v-if="searchResults.questions.length > 0" class="card">
-          <div class="text-xs font-medium text-slate-400 mb-2">💡 每日一问（{{ searchResults.questions.length }}）</div>
+          <div class="text-xs font-medium text-muted mb-2">💡 每日一问（{{ searchResults.questions.length }}）</div>
           <div class="space-y-2">
-            <div v-for="q in searchResults.questions" :key="q.id" class="p-2 hover:bg-white/5 rounded-lg">
-              <p class="text-xs text-slate-300">{{ q.original_question }}</p>
-              <p class="text-[10px] text-slate-500 mt-0.5">{{ q.question_date }} · {{ q.status === 'published' ? '已发文' : q.status === 'answered' ? '已回答' : '思考中' }}</p>
+            <div v-for="q in searchResults.questions" :key="q.id" class="p-2 hover:bg-[var(--bg-elevated)] rounded-lg">
+              <p class="text-xs text-secondary">{{ q.original_question }}</p>
+              <p class="text-[10px] text-muted mt-0.5">{{ q.question_date }} · {{ q.status === 'published' ? '已发文' : q.status === 'answered' ? '已回答' : '思考中' }}</p>
             </div>
           </div>
         </div>
 
         <div v-if="searchResults.notes.length > 0" class="card">
-          <div class="text-xs font-medium text-slate-400 mb-2">📝 打卡笔记（{{ searchResults.notes.length }}）</div>
+          <div class="text-xs font-medium text-muted mb-2">📝 打卡笔记（{{ searchResults.notes.length }}）</div>
           <div class="space-y-2">
-            <div v-for="n in searchResults.notes" :key="n.id" class="p-2 hover:bg-white/5 rounded-lg">
-              <p class="text-xs text-slate-300">{{ n.note || '(无笔记)' }}</p>
-              <p class="text-[10px] text-slate-500 mt-0.5">{{ n.check_in_date }} · 完成 {{ n.completed_count }}/{{ n.total_count }}</p>
+            <div v-for="n in searchResults.notes" :key="n.id" class="p-2 hover:bg-[var(--bg-elevated)] rounded-lg">
+              <p class="text-xs text-secondary">{{ n.note || '(无笔记)' }}</p>
+              <p class="text-[10px] text-muted mt-0.5">{{ n.check_in_date }} · 完成 {{ n.completed_count }}/{{ n.total_count }}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div v-else-if="searchQuery && !searching" class="text-center py-6 text-slate-500 text-sm">
+      <div v-else-if="searchQuery && !searching" class="text-center py-6 text-muted text-sm">
         未找到相关记录
       </div>
     </div>

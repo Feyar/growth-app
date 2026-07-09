@@ -25,7 +25,7 @@ const isToday = computed(() => {
   return dateStr.value === growth.today()
 })
 
-// ── 任务 ──
+// ── 任务：从规划树读取今日 daily 节点 ──
 interface Task {
   id: number
   label: string
@@ -34,11 +34,18 @@ interface Task {
   done: boolean
 }
 
-const tasks = ref<Task[]>([
-  { id: 1, icon: '📖', label: '查看系统结构', duration: '15′', done: false },
-  { id: 2, icon: '📖', label: '查软考报名时间+看真题', duration: '15′', done: false },
-  { id: 3, icon: '✍️', label: '写一条工作沉淀到笔记', duration: '5′', done: false },
-])
+const tasks = ref<Task[]>([])
+
+function loadDailyTasks() {
+  const raw = growth.getDailyTasks(dateStr.value)
+  tasks.value = raw.map((t, i) => ({
+    id: i + 1,
+    label: t.label,
+    icon: t.icon || '📋',
+    duration: t.duration || '',
+    done: false,
+  }))
+}
 
 const completedCount = computed(() => tasks.value.filter(t => t.done).length)
 const allDone = computed(() => completedCount.value === tasks.value.length && tasks.value.length > 0)
@@ -47,7 +54,6 @@ function toggleTask(id: number) {
   const task = tasks.value.find(t => t.id === id)
   if (task) {
     task.done = !task.done
-    // Update check-in if it's today
     if (isToday.value) {
       growth.checkIn(completedCount.value, tasks.value.length)
     }
@@ -109,12 +115,13 @@ const weekDays = computed(() => {
 onMounted(async () => {
   if (!auth.isLoggedIn()) return
   await growth.loadAll()
+  loadDailyTasks()
 })
 </script>
 
 <template>
   <div v-if="!auth.isLoggedIn()" class="flex flex-col items-center justify-center min-h-[60vh] px-6">
-    <p class="text-slate-400 text-sm">请先登录</p>
+    <p class="text-muted text-sm">请先登录</p>
     <router-link to="/login" class="btn-ghost mt-3">登录</router-link>
   </div>
 
@@ -123,8 +130,8 @@ onMounted(async () => {
     <div class="card">
       <div class="flex items-center justify-between mb-3">
         <div>
-          <div class="text-sm font-medium text-slate-200">{{ dateLabel }}</div>
-          <span v-if="!isToday" class="text-xs text-slate-400">查看历史记录</span>
+          <div class="text-sm font-medium text-primary">{{ dateLabel }}</div>
+          <span v-if="!isToday" class="text-xs text-muted">查看历史记录</span>
         </div>
         <div v-if="isToday" class="flex gap-1">
           <button
@@ -132,7 +139,7 @@ onMounted(async () => {
             :key="i"
             @click="energyLevel = i"
             class="w-7 h-7 rounded-full text-xs transition-all duration-150"
-            :class="energyLevel === i ? 'bg-grow-500 text-white scale-110' : 'bg-deep-600 text-slate-500'"
+            :class="energyLevel === i ? 'bg-accent text-white scale-110' : 'bg-elevated text-muted'"
           >
             {{ ['😞', '😐', '🙂', '😊', '😄'][i - 1] }}
           </button>
@@ -140,30 +147,36 @@ onMounted(async () => {
       </div>
 
       <!-- 今日任务 -->
-      <div class="space-y-2">
+      <div v-if="tasks.length > 0" class="space-y-2">
         <div
           v-for="task in tasks"
           :key="task.id"
           @click="toggleTask(task.id)"
           class="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-150"
-          :class="task.done ? 'bg-emerald-500/10 line-through text-slate-500' : 'bg-deep-600 hover:bg-deep-600/80 text-slate-200'"
+          :class="task.done ? 'bg-success line-through text-muted' : 'bg-elevated text-primary'"
         >
           <div
             class="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all shrink-0"
-            :class="task.done ? 'bg-emerald-500 border-emerald-500' : 'border-slate-600'"
+            :class="task.done ? 'bg-[var(--success)] border-[var(--success)]' : 'border-subtle'"
           >
             <span v-if="task.done" class="text-white text-xs">✓</span>
           </div>
           <span class="text-sm">{{ task.icon }} {{ task.label }}</span>
-          <span class="ml-auto text-xs text-slate-500">{{ task.duration }}</span>
+          <span class="ml-auto text-xs text-muted">{{ task.duration }}</span>
         </div>
       </div>
 
+      <!-- 无任务时 -->
+      <div v-else class="py-6 text-center">
+        <p class="text-sm text-muted">暂无今日规划任务</p>
+        <p class="text-xs text-muted mt-1">从 Obsidian 同步规划数据后可查看今日任务</p>
+      </div>
+
       <!-- 本周进度 -->
-      <div class="mt-4 pt-3 border-t border-white/5">
+      <div class="mt-4 pt-3 border-t border-subtle">
         <div class="flex justify-between items-center mb-2">
-          <span class="text-xs text-slate-400">本周进度</span>
-          <span class="text-xs text-slate-400">{{ growth.stats.week_completed }}/7</span>
+          <span class="text-xs text-muted">本周进度</span>
+          <span class="text-xs text-muted">{{ growth.stats.week_completed }}/7</span>
         </div>
         <div class="flex gap-1.5 justify-center">
           <div
@@ -173,11 +186,11 @@ onMounted(async () => {
           >
             <div
               class="w-7 h-7 rounded-lg text-[10px] flex items-center justify-center transition-all"
-              :class="day.today ? 'dot-today text-grow-400' : day.done ? 'dot-done text-white' : 'dot-miss text-slate-600'"
+              :class="day.today ? 'dot-today' : day.done ? 'dot-done' : 'dot-miss'"
             >
-              {{ day.done ? '✓' : '' }}
+              <span v-if="day.done" class="text-white text-[10px]">✓</span>
             </div>
-            <span class="text-[9px]" :class="day.today ? 'text-grow-400' : 'text-slate-600'">{{ day.today ? '今' : day.label }}</span>
+            <span class="text-[9px] text-muted">{{ day.today ? '今' : day.label }}</span>
           </div>
         </div>
       </div>
@@ -186,14 +199,14 @@ onMounted(async () => {
     <!-- 每日一问 -->
     <div class="card">
       <div class="flex items-center gap-2 mb-3">
-        <span class="text-sm font-medium text-slate-200">💡 每日一问</span>
-        <span class="text-[10px] text-slate-500">今天工作中有什么想深挖的？</span>
+        <span class="text-sm font-medium text-primary">💡 每日一问</span>
+        <span class="text-[10px] text-muted">今天工作中有什么想深挖的？</span>
       </div>
 
       <textarea
         v-model="questionText"
         placeholder="例如：今天发现达梦的limit语法和MySQL不一样，想搞清楚为什么..."
-        class="w-full bg-deep-600 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-grow-500/50 transition-colors resize-none h-20"
+        class="w-full bg-input border border-subtle rounded-xl px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-accent/50 transition-colors resize-none h-20"
       ></textarea>
 
       <div class="flex gap-2 mt-2">
@@ -214,18 +227,18 @@ onMounted(async () => {
       </div>
 
       <!-- AI深化结果 -->
-      <div v-if="showDeepened" class="mt-3 p-3 bg-grow-500/10 rounded-xl border border-grow-500/20 animate-slide-up">
-        <p class="text-xs text-grow-300 font-medium mb-1">🤖 深化方向</p>
-        <p class="text-xs text-slate-300 leading-relaxed">{{ deepenedText }}</p>
+      <div v-if="showDeepened" class="mt-3 p-3 bg-accent rounded-xl border border-accent animate-slide-up">
+        <p class="text-xs text-accent font-medium mb-1">🤖 深化方向</p>
+        <p class="text-xs text-secondary leading-relaxed">{{ deepenedText }}</p>
       </div>
 
       <!-- 我的回答 -->
       <div v-if="showDeepened" class="mt-3 animate-slide-up">
-        <label class="text-xs text-slate-400 mb-1 block">📝 我的研究结果</label>
+        <label class="text-xs text-muted mb-1 block">📝 我的研究结果</label>
         <textarea
           v-model="answerText"
           placeholder="记录你的理解..."
-          class="w-full bg-deep-600 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-grow-500/50 transition-colors resize-none h-16"
+          class="w-full bg-input border border-subtle rounded-xl px-3 py-2.5 text-sm text-primary placeholder:text-muted focus:outline-none focus:border-accent/50 transition-colors resize-none h-16"
         ></textarea>
       </div>
 
@@ -236,7 +249,7 @@ onMounted(async () => {
           :key="opt.key"
           @click="questionStatus = opt.key as any"
           class="text-[10px] px-2 py-1 rounded-full transition-all"
-          :class="questionStatus === opt.key ? 'bg-grow-500/20 text-grow-400 border border-grow-500/30' : 'bg-deep-600 text-slate-500 border border-transparent'"
+          :class="questionStatus === opt.key ? 'bg-accent border-accent text-accent' : 'bg-elevated text-muted border border-transparent'"
         >
           {{ opt.label }}
         </button>

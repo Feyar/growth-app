@@ -28,35 +28,35 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center px-6">
+  <div class="flex items-center justify-center px-6" style="min-height: 80vh;">
     <div class="w-full max-w-sm">
       <div class="text-center mb-8">
         <div class="text-5xl mb-4">🧭</div>
-        <h1 class="text-2xl font-bold text-slate-100">成长系统</h1>
-        <p class="text-sm text-slate-400 mt-2">登录你的账号，继续你的旅程</p>
+        <h1 class="text-2xl font-bold text-primary">人生系统</h1>
+        <p class="text-sm text-muted mt-2">登录你的账号，继续你的旅程</p>
       </div>
 
       <form @submit.prevent="handleLogin" class="card space-y-4">
         <div>
-          <label class="text-xs text-slate-400 mb-1 block">邮箱</label>
+          <label class="text-xs text-muted mb-1 block">邮箱</label>
           <input
             v-model="email"
             type="email"
             placeholder="you@example.com"
-            class="w-full bg-deep-600 border border-white/10 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-grow-500/50 transition-colors"
+            class="w-full bg-input border border-subtle rounded-xl px-4 py-3 text-primary placeholder:text-muted focus:outline-none focus:border-accent/50 transition-colors"
           />
         </div>
         <div>
-          <label class="text-xs text-slate-400 mb-1 block">密码</label>
+          <label class="text-xs text-muted mb-1 block">密码</label>
           <input
             v-model="password"
             type="password"
             placeholder="••••••••"
-            class="w-full bg-deep-600 border border-white/10 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-grow-500/50 transition-colors"
+            class="w-full bg-input border border-subtle rounded-xl px-4 py-3 text-primary placeholder:text-muted focus:outline-none focus:border-accent/50 transition-colors"
           />
         </div>
 
-        <p v-if="error" class="text-red-400 text-xs text-center">{{ error }}</p>
+        <p v-if="error" class="text-danger text-xs text-center">{{ error }}</p>
 
         <button
           type="submit"
@@ -67,7 +67,7 @@ async function handleLogin() {
         </button>
       </form>
 
-      <p class="text-center text-xs text-slate-500 mt-6">
+      <p class="text-center text-xs text-muted mt-6">
         首次使用？联系管理员开通账号
       </p>
     </div>

@@ -3,6 +3,22 @@ export type PlanLevel = 'vision' | 'annual' | 'quarterly' | 'monthly' | 'weekly'
 export type PlanArea = 'career' | 'finance' | 'health' | 'family' | 'general'
 export type PlanStatus = 'not_started' | 'in_progress' | 'completed' | 'paused' | 'abandoned'
 
+export interface DailyTask {
+  label: string
+  icon?: string
+  duration?: string
+}
+
+export interface PlanMeta {
+  tasks?: DailyTask[]
+  milestones?: string[]
+  daily_breakdown?: Record<string, DailyTask[]>
+  kr_id?: string
+  kr_metrics?: string
+  theme?: string
+  [key: string]: unknown
+}
+
 export interface PlanNode {
   id: string
   uid: string
@@ -18,7 +34,7 @@ export interface PlanNode {
   sort_order: number
   is_current: boolean
   archived: boolean
-  meta: Record<string, unknown>
+  meta: PlanMeta
   created_at: string
   updated_at: string
   children?: PlanNode[]

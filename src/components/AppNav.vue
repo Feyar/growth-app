@@ -22,14 +22,18 @@ const activeTab = computed(() => {
 </script>
 
 <template>
-  <nav class="fixed bottom-0 left-0 right-0 z-50 bg-deep-800/95 backdrop-blur-lg border-t border-white/5 safe-area-pb">
+  <nav
+    class="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-lg border-t safe-area-pb"
+    :style="{ backgroundColor: 'var(--nav-bg)', borderColor: 'var(--nav-border)' }"
+  >
     <div class="max-w-lg mx-auto flex justify-around py-2 px-2">
       <router-link
         v-for="tab in tabs"
         :key="tab.key"
         :to="tab.path"
         class="flex flex-col items-center py-1 px-4 rounded-xl transition-all duration-150"
-        :class="activeTab === tab.key ? 'text-grow-400 scale-105' : 'text-slate-500'"
+        :class="activeTab === tab.key ? 'scale-105' : ''"
+        :style="{ color: activeTab === tab.key ? 'var(--accent)' : 'var(--text-muted)' }"
       >
         <span class="text-xl leading-none mb-0.5">{{ tab.icon }}</span>
         <span class="text-[10px] font-medium">{{ tab.label }}</span>

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { PlanNode, CheckIn, DailyQuestion, StreakStats, HeatmapDay, InsightData, PipelineStats, Article } from '@/types'
+import type { PlanNode, CheckIn, DailyQuestion, StreakStats, HeatmapDay, InsightData, PipelineStats, Article, DailyTask } from '@/types'
 import {
   fetchPlanTree, fetchCheckIns, fetchTodayCheckIn, upsertCheckIn,
   fetchQuestions, fetchTodayQuestion, upsertQuestion,
@@ -99,6 +99,22 @@ export const useGrowthStore = defineStore('growth', () => {
     articles.value = await fetchArticles()
   }
 
+  function getDailyTasks(date: string): DailyTask[] {
+    const plan = plans.value.find(
+      p => p.level === 'daily' && p.start_date === date
+    )
+    if (plan && plan.meta && Array.isArray(plan.meta.tasks)) {
+      return plan.meta.tasks.map((t: any, i: number) => ({
+        id: i + 1,
+        label: typeof t === 'string' ? t : (t.label || ''),
+        icon: t.icon || '📋',
+        duration: t.duration || '',
+        done: false,
+      }))
+    }
+    return []
+  }
+
   // ── 洞察分析数据 ──
   async function loadInsights(): Promise<InsightData | null> {
     const d = new Date()
@@ -177,7 +193,7 @@ export const useGrowthStore = defineStore('growth', () => {
     plans, checkIns, todayCheckIn, questions, articles, stats, heatmapData, loading,
     currentPlanPath, pipelineStats, unansweredQuestions, today,
     loadPlans, loadCheckIns, loadToday, loadQuestions, loadStats, loadHeatmap, loadAll, loadArticles,
-    checkIn, saveQuestion, loadInsights, search,
+    checkIn, saveQuestion, loadInsights, search, getDailyTasks,
   }
 })
 

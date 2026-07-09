@@ -105,6 +105,17 @@ export async function fetchArticles(): Promise<Article[]> {
   return (data as Article[]) || []
 }
 
+// ===================== 同步状态 API =====================
+export async function fetchLatestPlanUpdate(): Promise<string | null> {
+  if (!supabaseEnabled || !supabase) return null
+  const { data } = await api.from('growth_plans')
+    .select('updated_at')
+    .order('updated_at', { ascending: false })
+    .limit(1)
+  if (data && data.length > 0) return data[0].updated_at
+  return null
+}
+
 // ===================== 统计 API =====================
 export async function fetchStreakStats() {
   if (!supabaseEnabled || !supabase) {

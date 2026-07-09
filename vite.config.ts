@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
       manifest: {
-        name: '成长系统 — 个人规划与打卡',
-        short_name: '成长系统',
+        name: '人生系统 — 个人规划与打卡',
+        short_name: '人生系统',
         description: '把你的长期规划，变成每日可执行的一件事 — 规划树/每日打卡/每日一问/进度追溯',
         theme_color: '#F59E0B',
         background_color: '#0B1121',

@@ -2,6 +2,101 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── CSS 变量（默认 = dark） ── */
+:root,
+[data-theme="dark"] {
+  --bg-page: #0B1121;
+  --bg-card: #1A2332;
+  --bg-card-highlight: linear-gradient(135deg, #1A2332, #111827);
+  --bg-elevated: #1E293B;
+  --bg-subtle: #111827;
+  --bg-input: #1E293B;
+
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --text-dim: #475569;
+
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-hover: rgba(255, 255, 255, 0.10);
+
+  --accent: #F59E0B;
+  --accent-light: #FBBF24;
+  --accent-bg: rgba(245, 158, 11, 0.15);
+  --accent-border: rgba(245, 158, 11, 0.25);
+
+  --success: #34D399;
+  --success-bg: rgba(52, 211, 153, 0.10);
+  --danger: #F87171;
+  --danger-bg: rgba(248, 113, 113, 0.10);
+
+  --dot-done: #F59E0B;
+  --dot-miss-bg: #1E293B;
+  --dot-today-bg: rgba(245, 158, 11, 0.20);
+  --dot-today-border: #FBBF24;
+
+  --heat-0: rgba(30, 41, 59, 0.5);
+  --heat-1: rgba(120, 53, 15, 0.6);
+  --heat-2: rgba(180, 83, 9, 0.7);
+  --heat-3: rgba(245, 158, 11, 0.8);
+  --heat-4: #FBBF24;
+
+  --nav-bg: rgba(11, 17, 33, 0.85);
+  --nav-border: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="light"] {
+  --bg-page: #F4F5F7;
+  --bg-card: #FFFFFF;
+  --bg-card-highlight: linear-gradient(135deg, #FFFFFF, #FAFBFC);
+  --bg-elevated: #EEF0F4;
+  --bg-subtle: #FAFBFC;
+  --bg-input: #FFFFFF;
+
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --text-dim: #CBD0D8;
+
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-hover: rgba(0, 0, 0, 0.12);
+
+  --accent: #D97706;
+  --accent-light: #F59E0B;
+  --accent-bg: rgba(217, 119, 6, 0.10);
+  --accent-border: rgba(217, 119, 6, 0.20);
+
+  --success: #059669;
+  --success-bg: rgba(5, 150, 105, 0.10);
+  --danger: #DC2626;
+  --danger-bg: rgba(220, 38, 38, 0.08);
+
+  --dot-done: #D97706;
+  --dot-miss-bg: #E2E6EC;
+  --dot-today-bg: rgba(217, 119, 6, 0.15);
+  --dot-today-border: #D97706;
+
+  --heat-0: rgba(226, 230, 236, 0.7);
+  --heat-1: rgba(251, 191, 36, 0.3);
+  --heat-2: rgba(245, 158, 11, 0.5);
+  --heat-3: rgba(217, 119, 6, 0.7);
+  --heat-4: #D97706;
+
+  --nav-bg: rgba(255, 255, 255, 0.90);
+  --nav-border: rgba(0, 0, 0, 0.06);
+}
+
+/* ── 过渡动画（平滑切换主题） ── */
+html {
+  transition: background-color 0.6s ease, color 0.6s ease;
+}
+
+*,
+*::before,
+*::after {
+  transition: background-color 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease;
+}
+
 /* ── 基础 ── */
 html, body {
   -webkit-tap-highlight-color: transparent;
@@ -10,8 +105,8 @@ html, body {
 }
 
 body {
-  background-color: #0B1121;
-  color: #F1F5F9;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
 }
 
 /* ── 滚动条 ── */
@@ -21,61 +116,169 @@ body {
 
 /* ── 实用类 ── */
 .card {
-  @apply bg-deep-700 rounded-2xl p-4 border border-white/5 shadow-lg;
+  background-color: var(--bg-card);
+  border-radius: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
 .card-highlight {
-  @apply card border-grow-500/20 bg-gradient-to-br from-deep-700 to-deep-800;
+  border-radius: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--accent-border);
+  background: var(--bg-card-highlight);
 }
 
 .btn-primary {
-  @apply bg-gradient-to-r from-grow-500 to-grow-600 text-white font-semibold
-         rounded-xl px-6 py-3 active:scale-95 transition-all duration-150
-         shadow-lg shadow-grow-500/25 disabled:opacity-50 disabled:active:scale-100;
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  color: white;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+}
+
+.btn-primary:disabled:active {
+  transform: none;
 }
 
 .btn-ghost {
-  @apply bg-white/5 text-slate-300 font-medium rounded-xl px-4 py-2
-         active:scale-95 transition-all duration-150 hover:bg-white/10;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  font-weight: 500;
+  border-radius: 0.75rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.btn-ghost:active {
+  transform: scale(0.95);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="light"] .btn-ghost {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .btn-ghost:hover {
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .stat-card {
-  @apply bg-deep-700 rounded-2xl p-4 text-center border border-white/5;
+  background-color: var(--bg-card);
+  border-radius: 1rem;
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid var(--border-subtle);
 }
 
 .stat-value {
-  @apply text-2xl font-bold text-grow-400;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
 }
 
 .stat-label {
-  @apply text-xs text-slate-400 mt-1;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
 }
 
 .progress-bar {
-  @apply h-2 bg-deep-600 rounded-full overflow-hidden;
+  height: 0.5rem;
+  background-color: var(--bg-elevated);
+  border-radius: 9999px;
+  overflow: hidden;
 }
 
 .progress-fill {
-  @apply h-full bg-gradient-to-r from-grow-500 to-grow-400 rounded-full transition-all duration-700 ease-out;
+  height: 100%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  border-radius: 9999px;
+  transition: width 0.7s ease-out;
 }
 
 /* ── 打卡方块 ── */
 .dot-done {
-  @apply w-8 h-8 rounded-lg bg-grow-500 shadow-sm shadow-grow-500/30;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background-color: var(--dot-done);
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.75rem;
 }
+
 .dot-miss {
-  @apply w-8 h-8 rounded-lg bg-deep-600 border border-white/5;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background-color: var(--dot-miss-bg);
+  border: 1px solid var(--border-subtle);
 }
+
 .dot-today {
-  @apply w-8 h-8 rounded-lg border-2 border-grow-400 bg-grow-500/20;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--dot-today-border);
+  background-color: var(--dot-today-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
 }
 
 /* ── 热力图颜色 ── */
-.heat-0 { @apply bg-deep-600/50 }
-.heat-1 { @apply bg-grow-900/60 }
-.heat-2 { @apply bg-grow-700/70 }
-.heat-3 { @apply bg-grow-500/80 }
-.heat-4 { @apply bg-grow-400 }
+.heat-0 { background-color: var(--heat-0); }
+.heat-1 { background-color: var(--heat-1); }
+.heat-2 { background-color: var(--heat-2); }
+.heat-3 { background-color: var(--heat-3); }
+.heat-4 { background-color: var(--heat-4); }
+
+/* ── 主题容器类 ── */
+.bg-page { background-color: var(--bg-page); }
+.bg-card { background-color: var(--bg-card); }
+.bg-elevated { background-color: var(--bg-elevated); }
+.bg-subtle { background-color: var(--bg-subtle); }
+.bg-input { background-color: var(--bg-input); }
+.bg-accent { background-color: var(--accent-bg); }
+.bg-success { background-color: var(--success-bg); }
+.bg-danger { background-color: var(--danger-bg); }
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.text-accent { color: var(--accent); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+
+.border-subtle { border-color: var(--border-subtle); }
+.border-accent { border-color: var(--accent-border); }
 
 /* ── 过渡动画 ── */
 .fade-enter-active, .fade-leave-active {
@@ -90,3 +293,21 @@ body {
 }
 .slide-enter-from { transform: translateX(20px); opacity: 0; }
 .slide-leave-to { transform: translateX(-20px); opacity: 0; }
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

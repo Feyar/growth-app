@@ -26,7 +26,7 @@ const rootNodes = () => {
 
 <template>
   <div v-if="!auth.isLoggedIn()" class="flex flex-col items-center justify-center min-h-[60vh] px-6">
-    <p class="text-slate-400 text-sm">请先登录</p>
+    <p class="text-muted text-sm">请先登录</p>
     <router-link to="/login" class="btn-ghost mt-3">登录</router-link>
   </div>
 
@@ -38,7 +38,7 @@ const rootNodes = () => {
         :key="f.key"
         @click="activeFilter = f.key"
         class="shrink-0 text-xs px-3 py-1.5 rounded-full transition-all duration-150"
-        :class="activeFilter === f.key ? 'bg-grow-500/20 text-grow-400 border border-grow-500/30' : 'bg-deep-700 text-slate-400 border border-white/5'"
+        :class="activeFilter === f.key ? 'bg-accent border-accent text-accent' : 'bg-card text-muted border-subtle'"
       >
         {{ f.label }}
       </button>
@@ -56,7 +56,7 @@ const rootNodes = () => {
     </div>
 
     <div v-if="rootNodes().length === 0" class="text-center py-12">
-      <p class="text-slate-500 text-sm">暂无规划数据</p>
+      <p class="text-muted text-sm">暂无规划数据</p>
     </div>
   </div>
 </template>
