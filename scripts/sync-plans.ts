@@ -308,6 +308,65 @@ function parseDaily(uid: string, parentId: string | null): Partial<PlanNode>[] {
   return nodes
 }
 
+/** 学习计划 → daily 节点 */
+function parseLearningPlan(uid: string, parentId: string | null): Partial<PlanNode>[] {
+  const nodes: Partial<PlanNode>[] = []
+  const plansDir = path.join(WIKI_ROOT, '04-学习计划')
+
+  if (!fs.existsSync(plansDir)) return []
+
+  // 扫描阶段目录
+  const phaseDirs = fs.readdirSync(plansDir)
+    .filter(f => fs.statSync(path.join(plansDir, f)).isDirectory())
+    .sort()
+
+  for (const phaseDir of phaseDirs) {
+    const phasePath = path.join(plansDir, phaseDir)
+
+    // 读取每日文件（按日期命名：YYYY-MM-DD-*.md）
+    const dayFiles = fs.readdirSync(phasePath)
+      .filter(f => /^\d{4}-\d{2}-\d{2}/.test(f) && f.endsWith('.md'))
+      .sort()
+
+    for (const file of dayFiles) {
+      const content = fs.readFileSync(path.join(phasePath, file), 'utf-8')
+
+      // 从文件名提取日期：YYYY-MM-DD-标题.md
+      const dateStr = file.slice(0, 10)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) continue
+
+      // 解析任务（休息日可能没有任务，跳过文件级别校验）
+      const tasks = parseTasksWithIcons(content)
+
+      // 从 frontmatter 提取标题
+      const titleMatch = content.match(/^#\s+(.+)$/m)
+      const title = titleMatch ? titleMatch[1].trim() : `${dateStr} ${phaseDir}`
+
+      nodes.push({
+        uid,
+        parent_id: parentId,
+        level: 'daily' as PlanLevel,
+        area: 'general' as PlanArea,
+        title: `${title} [${phaseDir}]`,
+        description: `学习计划 · ${phaseDir}`,
+        progress: 0,
+        status: 'not_started' as PlanStatus,
+        start_date: dateStr,
+        end_date: dateStr,
+        sort_order: 45,
+        is_current: false,
+        meta: {
+          tasks,
+          plan_phase: phaseDir,
+          source: 'learning_plan',
+        } as PlanMeta,
+      })
+    }
+  }
+
+  return nodes
+}
+
 // ===== 同步主函数 =====
 async function sync() {
   console.log('🚀 开始同步规划数据...\n')
@@ -355,6 +414,9 @@ async function sync() {
 
   const dailies = parseDaily(uid, null)
   allNodes.push(...dailies)
+
+  const learningPlans = parseLearningPlan(uid, null)
+  allNodes.push(...learningPlans)
 
   console.log(`📋 共解析 ${allNodes.length} 个规划节点\n`)
 

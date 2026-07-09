@@ -127,6 +127,11 @@ onMounted(async () => {
   if (!auth.isLoggedIn()) return
   await growth.loadAll()
   loadDailyTasks()
+  // 从已保存的打卡记录恢复 UI 状态
+  if (growth.todayCheckIn) {
+    checkInDone.value = true
+    energyLevel.value = growth.todayCheckIn.energy_level || 3
+  }
 })
 </script>
 

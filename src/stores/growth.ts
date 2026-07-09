@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import type { PlanNode, CheckIn, DailyQuestion, StreakStats, HeatmapDay, InsightData, PipelineStats, Article, DailyTask } from '@/types'
 import {
   fetchPlanTree, fetchCheckIns, fetchTodayCheckIn, upsertCheckIn,
@@ -74,7 +75,9 @@ export const useGrowthStore = defineStore('growth', () => {
   }
 
   async function checkIn(completedCount: number, totalCount: number, energyLevel?: number, note?: string) {
+    const authStore = useAuthStore()
     const result = await upsertCheckIn({
+      uid: authStore.user?.id,
       check_in_date: today(),
       completed_count: completedCount,
       total_count: totalCount,
@@ -100,19 +103,33 @@ export const useGrowthStore = defineStore('growth', () => {
   }
 
   function getDailyTasks(date: string): DailyTask[] {
-    const plan = plans.value.find(
+    const dayPlans = plans.value.filter(
       p => p.level === 'daily' && p.start_date === date
     )
-    if (plan && plan.meta && Array.isArray(plan.meta.tasks)) {
-      return plan.meta.tasks.map((t: any, i: number) => ({
-        id: i + 1,
-        label: typeof t === 'string' ? t : (t.label || ''),
-        icon: t.icon || '📋',
-        duration: t.duration || '',
-        done: false,
-      }))
+
+    const allTasks: DailyTask[] = []
+    for (const plan of dayPlans) {
+      if (plan.meta && Array.isArray(plan.meta.tasks)) {
+        const source = (plan.meta as any).source || 'daily_record'
+        for (const t of plan.meta.tasks) {
+          allTasks.push({
+            label: typeof t === 'string' ? t : (t.label || ''),
+            icon: t.icon || '📋',
+            duration: t.duration || '',
+            source,
+          })
+        }
+      }
     }
-    return []
+
+    return allTasks.map((t, i) => ({
+      id: i + 1,
+      label: t.label,
+      icon: t.icon || '📋',
+      duration: t.duration || '',
+      done: false,
+      source: t.source,
+    }))
   }
 
   // ── 洞察分析数据 ──

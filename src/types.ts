@@ -7,6 +7,7 @@ export interface DailyTask {
   label: string
   icon?: string
   duration?: string
+  source?: string
 }
 
 export interface PlanMeta {
