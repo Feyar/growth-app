@@ -39,7 +39,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
 
     const data = await response.json()
-    const deepened = data.choices?.[0]?.message?.content || '未能获取深化分析'
+
+    if (!response.ok) {
+      console.error('DeepSeek API error:', response.status, JSON.stringify(data))
+      return res.status(200).json({
+        deepened: `AI 服务返回错误 (${response.status})，请稍后再试。`,
+      })
+    }
+
+    const deepened = data.choices?.[0]?.message?.content
+    if (!deepened) {
+      console.error('Unexpected DeepSeek response:', JSON.stringify(data))
+      return res.status(200).json({
+        deepened: 'AI 返回格式异常，请稍后再试。',
+      })
+    }
 
     res.json({ deepened })
   } catch (error) {
