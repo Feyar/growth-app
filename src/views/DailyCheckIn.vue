@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useGrowthStore } from '@/stores/growth'
 
 const auth = useAuthStore()
 const growth = useGrowthStore()
 const route = useRoute()
+const router = useRouter()
 
 // ── 当前日期 ──
 const today = ref(new Date())
@@ -109,30 +110,53 @@ async function handleCheckIn() {
 // ── 本周进度 ──
 const weekDays = computed(() => {
   const days = []
-  const now = new Date()
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now)
-    d.setDate(d.getDate() - i)
+  // 计算选中日期所在周的周一~周日
+  const base = route.params.date ? new Date(route.params.date as string) : new Date()
+  const dayOfWeek = base.getDay() === 0 ? 6 : base.getDay() - 1 // 周一=0
+  const monday = new Date(base)
+  monday.setDate(base.getDate() - dayOfWeek)
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday)
+    d.setDate(monday.getDate() + i)
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const checkIn = growth.checkIns.find(c => c.check_in_date === key)
     days.push({
-      label: ['日', '一', '二', '三', '四', '五', '六'][d.getDay()],
+      label: ['一', '二', '三', '四', '五', '六', '日'][i],
       done: checkIn ? checkIn.completed_count > 0 : false,
       today: key === growth.today(),
+      date: key,
     })
   }
   return days
+})
+
+watch(() => route.params.date, () => {
+  loadDailyTasks()
+  const checkIn = dateStr.value === growth.today()
+    ? growth.todayCheckIn
+    : growth.checkIns.find(c => c.check_in_date === dateStr.value)
+  if (checkIn) {
+    checkInDone.value = true
+    energyLevel.value = checkIn.energy_level || 3
+    tasks.value.forEach(t => { t.done = true })
+  } else {
+    checkInDone.value = false
+    energyLevel.value = 3
+    tasks.value.forEach(t => { t.done = false })
+  }
 })
 
 onMounted(async () => {
   if (!auth.isLoggedIn()) return
   await growth.loadAll()
   loadDailyTasks()
-  // 从已保存的打卡记录恢复 UI 状态
-  if (growth.todayCheckIn) {
+  // 恢复该日期的打卡 UI 状态
+  const checkIn = dateStr.value === growth.today()
+    ? growth.todayCheckIn
+    : growth.checkIns.find(c => c.check_in_date === dateStr.value)
+  if (checkIn) {
     checkInDone.value = true
-    energyLevel.value = growth.todayCheckIn.energy_level || 3
-    // 已打卡的任务置为已完成（划掉不可勾选）
+    energyLevel.value = checkIn.energy_level || 3
     tasks.value.forEach(t => { t.done = true })
   }
 })
@@ -206,6 +230,8 @@ onMounted(async () => {
             <div
               class="w-7 h-7 rounded-lg text-[10px] flex items-center justify-center transition-all"
               :class="day.today ? 'dot-today' : day.done ? 'dot-done' : 'dot-miss'"
+              @click="router.push('/checkin/' + day.date)"
+              :style="{ cursor: 'pointer' }"
             >
               <span v-if="day.done" class="text-white text-[10px]">✓</span>
             </div>

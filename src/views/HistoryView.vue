@@ -192,6 +192,7 @@ watch(activeTab, async (tab) => {
             :key="di"
             class="w-[calc((100%-28px)/7)] aspect-square rounded-md flex items-center justify-center text-[9px] cursor-pointer transition-all"
             :class="day ? `heat-${day.level}` : 'bg-transparent'"
+            @click="day && router.push('/checkin/' + day.date)"
             @mouseenter="hoverDay = day"
             @mouseleave="hoverDay = null"
           >

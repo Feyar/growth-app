@@ -412,9 +412,6 @@ async function sync() {
   const weeklies = parseWeekly(uid, null)
   allNodes.push(...weeklies)
 
-  const dailies = parseDaily(uid, null)
-  allNodes.push(...dailies)
-
   const learningPlans = parseLearningPlan(uid, null)
   allNodes.push(...learningPlans)
 
