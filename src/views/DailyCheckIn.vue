@@ -56,9 +56,6 @@ function toggleTask(id: number) {
   const task = tasks.value.find(t => t.id === id)
   if (task) {
     task.done = !task.done
-    if (isToday.value) {
-      growth.checkIn(completedCount.value, tasks.value.length)
-    }
   }
 }
 
